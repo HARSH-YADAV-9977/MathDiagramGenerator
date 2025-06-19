@@ -10,6 +10,10 @@ CORS(app)
 
 @app.route('/generate-diagram', methods=['POST'])
 def generate_diagram():
+
+    if not os.path.isdir('/static'):
+        os.mkdir('/static')
+        
     print("GENERATING THE DIAGRAM!!!!!!!!!!!!")
     # Get the question from the frontend
     data = request.json
