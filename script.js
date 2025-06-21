@@ -1,131 +1,70 @@
-// function generateDiagram() {
-//     const question = document.getElementById('question').value;
-//     const angle = parseInt(question.match(/\d+/)[0]); // Extract the angle
-//     const radians = (angle / 2) * (Math.PI / 180); // Convert to radians
-//     const tangentLength = 150;
+const textarea = document.getElementById('question');
 
-//     // Clear the canvas
-//     ctx.clearRect(0, 0, canvas.width, canvas.height);
+textarea.addEventListener('input', function () {
+  this.style.height = 'auto'; // Reset height to shrink if needed
+  this.style.height = (this.scrollHeight) + 'q'; // Set height to scroll height
+});
 
-//     // Draw circle
-//     ctx.beginPath();
-//     ctx.arc(200, 200, 100, 0, 2 * Math.PI);
-//     ctx.stroke();
+const loadingMessages = [
+  "Generating.........",
+  "This may take some time........"
+];
+let loadingIndex = 0;
+let loadingInterval;
 
-//     // Draw tangents
-//     ctx.beginPath();
-//     ctx.moveTo(200, 200);
-//     ctx.lineTo(200 + tangentLength * Math.cos(radians), 200 - tangentLength * Math.sin(radians));
-//     ctx.stroke();
-
-//     ctx.beginPath();
-//     ctx.moveTo(200, 200);
-//     ctx.lineTo(200 + tangentLength * Math.cos(-radians), 200 - tangentLength * Math.sin(-radians));
-//     ctx.stroke();
-// }
-const canvas = document.getElementById('mathCanvas');
-const ctx = canvas.getContext('2d');
-
-// // Draw a circle
-// ctx.beginPath();
-// ctx.arc(200, 200, 100, 0, 2 * Math.PI); // Center (200,200), radius 100
-// ctx.stroke();
-
-// // Draw two lines (hardcoded for now)
-// ctx.beginPath();
-// ctx.moveTo(200, 200); // Start point
-// ctx.lineTo(300, 100); // End point
-// ctx.stroke();
-
-// ctx.beginPath();
-// ctx.moveTo(200, 200); // Start point
-// ctx.lineTo(100, 100); // End point
-// ctx.stroke();
-function generateDiagram() {
+console.log("script.js loaded");
+async function generateDiagram() {
     const question = document.getElementById('question').value;
-    const radius = Number(document.getElementById('radius').value);
+    console.log('request sent')
+    const loadingGif = document.getElementById('loadingGif');
+    const loadingText = document.getElementById('loadingText');
+    const diagramImage = document.getElementById('diagramImage');
 
-    const angle = Number(question); // Hardcoded for now
-    const radians = (angle / 2) * (Math.PI / 180); // Convert to radians
-    const tangentLength = radius;
+    loadingGif.style.display = 'block';
+    loadingText.style.display = 'block';
+    diagramImage.style.display = 'none';
 
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    loadingText.textContent = loadingMessages[loadingIndex];
+    loadingInterval = setInterval(() => {
+        loadingIndex = (loadingIndex + 1) % loadingMessages.length;
+        loadingText.textContent = loadingMessages[loadingIndex];
+    }, 10000);
 
-    // Draw circle
-    ctx.beginPath();
-    ctx.arc(200, 200, radius, 0, 2 * Math.PI);
-    ctx.stroke();
+    try {
+        const response = await fetch('http://127.0.0.1:5000/generate-diagram', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ question: question })
+        });
 
-    // Draw tangents
-    ctx.beginPath();
-    ctx.moveTo(200, 200);
-    ctx.lineTo(200 + tangentLength * Math.cos(radians), 200 - tangentLength * Math.sin(radians));
-    ctx.stroke();
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
 
-    ctx.beginPath();
-    ctx.moveTo(200, 200);
-    ctx.lineTo(200 + tangentLength * Math.cos(-radians), 200 - tangentLength * Math.sin(-radians));
-    ctx.stroke();
+        const result = await response.json();
+        console.log(result);
+        
+        
+        const imageUrl = 'http://127.0.0.1:5000/static/diagram.png?t=' + new Date().getTime();
+        console.log("Updating image to:", imageUrl);
+        diagramImage.onload = () => {
+            clearInterval(loadingInterval);
+            loadingGif.style.display = 'none';
+            loadingText.style.display = 'none';
+            diagramImage.style.display = 'block';
+            loadingIndex = 0;
+        };
+        diagramImage.src = imageUrl;
+
+    } catch (error) {
+        clearInterval(loadingInterval);
+        loadingGif.style.display = 'none';
+        loadingText.style.display = 'none';
+        loadingIndex = 0;
+        console.error("Error generating diagram:", error);
+        alert("Failed to generate diagram.");
+    }
 }
-// function generateDiagram() {
-//     const question = document.getElementById('question').value;
 
-//     // Send the question to the backend
-//     fetch('http://127.0.0.1:5000/generate-diagram', {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({ question: question }),
-//     })
-//     .then(response => response.json())
-//     .then(data => {
-//         // Display the response
-//         document.getElementById('response').innerText = JSON.stringify(data, null, 2);
-
-//         // Draw the diagram (for now, just log the data)
-//         console.log(data);
-//     })
-//     .catch(error => {
-//         console.error('Error:', error);
-//     });
-// }
-
-// function generateDiagram() {
-//     const question = document.getElementById('question').value;
-
-
-//     // backend
-// // Send the question to the backend
-// fetch('http://127.0.0.1:5000/generate-diagram', {
-//     method: 'POST',
-//     headers: {
-//         'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify({ question: question }),
-// })
-// .then(response => response.json()).then(data=>{
-//     const angle = data.angle;
-//     const radians = (angle / 2) * (Math.PI / 180); // Convert to radians
-//     const tangentLength = 150;
-//      // Clear the canvas
-//      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-//      // Draw circle
-//      ctx.beginPath();
-//      ctx.arc(200, 200, 100, 0, 2 * Math.PI);
-//      ctx.stroke();
- 
-//      // Draw tangents
-//      ctx.beginPath();
-//      ctx.moveTo(200, 200);
-//      ctx.lineTo(200 + tangentLength * Math.cos(radians), 200 - tangentLength * Math.sin(radians));
-//      ctx.stroke();
- 
-//      ctx.beginPath();
-//      ctx.moveTo(200, 200);
-//      ctx.lineTo(200 + tangentLength * Math.cos(-radians), 200 - tangentLength * Math.sin(-radians));
-//      ctx.stroke();
-// })
-// }
